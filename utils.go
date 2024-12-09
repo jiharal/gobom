@@ -1,6 +1,10 @@
 package gobom
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/xml"
+	"fmt"
 	"go/parser"
 	"go/token"
 	"path/filepath"
@@ -28,4 +32,23 @@ func (g *Generator) getRepositoryURL(depName string) string {
 		return "https://" + depName
 	}
 	return depName
+}
+
+// Utility function to generate a random serial number
+func generateSerialNumber() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("urn:uuid:%s", hex.EncodeToString(bytes)), nil
+}
+
+// ExportCycloneDX exports the BOM in CycloneDX format
+func (b *BOM) ExportCycloneDX() ([]byte, error) {
+	cdx, err := b.ToCycloneDX()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to CycloneDX: %v", err)
+	}
+
+	return xml.MarshalIndent(cdx, "", "  ")
 }
